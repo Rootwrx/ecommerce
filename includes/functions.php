@@ -312,7 +312,6 @@ function importProductsFromJson($jsonFile) {
         return false;
     }
 }
-// Get all products with optional filtering
 
 
 // Get all products with optional filtering
