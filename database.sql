@@ -1,6 +1,6 @@
 -- Create database
-CREATE DATABASE IF NOT EXISTS eco2;
-USE eco2;
+CREATE DATABASE IF NOT EXISTS mseet_38613261_eco2;
+USE mseet_38613261_eco2;
 
 -- Users table (for both admins and clients)
 CREATE TABLE users (

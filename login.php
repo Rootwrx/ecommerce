@@ -15,7 +15,7 @@ $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Trim and sanitize input
     $username = trim(sanitize($_POST['username']));
-    $password = $_POST['password'];
+    $password = trim($_POST['password']);
 
     // Validate input
     if (empty($username)) {
@@ -36,7 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $db->prepare("SELECT user_id, username, password, user_type FROM users WHERE $field = ? LIMIT 1");
 
             if (!$stmt) {
-                throw new Exception("Preparation of SQL statement failed: " .' $db->error');
+                throw new Exception("Preparation of SQL statement failed: ");
+
             }
 
             $stmt->bind_param("s", $username);

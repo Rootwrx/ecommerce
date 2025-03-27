@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME; ?></title>
     <link rel="stylesheet" href="<?php echo ASSETS_URL; ?>/css/style.css">
+    <script src="<?php echo ASSETS_URL; ?>/js/main.js"></script>
 </head>
 
 <body>
