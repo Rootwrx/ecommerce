@@ -68,7 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // If no errors, register user
     if (empty($errors)) {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $hashed_password = $password;
         $user_type = 'client'; // Default user type
         
         $stmt = $db->prepare("INSERT INTO users (username, password, email, full_name, address, phone, user_type) VALUES (?, ?, ?, ?, ?, ?, ?)");

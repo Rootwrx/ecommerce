@@ -482,9 +482,10 @@ textarea {
 
 .filter-options label {
   margin-bottom: 10px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr; 
+  gap: 30px;
   align-items: center;
-  justify-content: flex-start;
 }
 .filter-options label span {
   flex: 1;
