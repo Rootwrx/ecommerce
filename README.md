@@ -34,7 +34,6 @@ This is a comprehensive e-commerce platform designed to provide a seamless shopp
 
 ## Security Considerations
 
-- Passwords are securely hashed.
 - Tokens are used for "Remember Me" functionality and are securely stored.
 - SQL statements are prepared to prevent SQL injection.
 
