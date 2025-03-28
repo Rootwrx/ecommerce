@@ -47,18 +47,16 @@
                 </div>
 
                 <div class="user-actions">
+                    <a href="<?php echo BASE_URL; ?>/cart.php" class="cart-icon">
+                        Cart
+                        <?php
+                        $cart = getCart();
+                        if ($cart['item_count'] > 0) {
+                            echo '<span class="cart-count">' . $cart['item_count'] . '</span>';
+                        }
+                        ?>
+                    </a>
                     <?php if (isLoggedIn()): ?>
-                        <a href="<?php echo BASE_URL; ?>/cart.php" class="cart-icon">
-                            Cart
-                            <?php
-                            if (isset($_SESSION['user_id'])) {
-                                $cart = getUserCart($_SESSION['user_id']);
-                                if ($cart['item_count'] > 0) {
-                                    echo '<span class="cart-count">' . $cart['item_count'] . '</span>';
-                                }
-                            }
-                            ?>
-                        </a>
                         <div class="dropdown">
                             <a href="#" class="user-menu">
                                 <?php echo $_SESSION['username']; ?>

@@ -58,7 +58,22 @@ include 'includes/header.php';
             <p><?php echo $product['description']; ?></p>
         </div>
         
-        <?php if (isLoggedIn()): ?>
+        <?php 
+        // Check if product is already in cart
+        $cartItemId = isProductInCart($product['product_id']);
+        
+        if ($cartItemId): // Product is in cart
+        ?>
+            <div class="product-detail-actions">
+                <form action="<?php echo BASE_URL; ?>/cart-actions.php" method="POST" style="display: inline-block; margin-right: 10px;">
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="cart_item_id" value="<?php echo $cartItemId; ?>">
+                    <button type="submit" class="btn btn-danger">Remove from Cart</button>
+                </form>
+                <a href="<?php echo BASE_URL; ?>/cart.php" class="btn">View in Cart</a>
+                <a href="<?php echo BASE_URL; ?>" class="btn">Continue Shopping</a>
+            </div>
+        <?php else: // Product is not in cart ?>
             <form action="<?php echo BASE_URL; ?>/cart-actions.php" method="POST">
                 <input type="hidden" name="action" value="add">
                 <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
@@ -75,11 +90,45 @@ include 'includes/header.php';
                     <a href="<?php echo BASE_URL; ?>" class="btn">Continue Shopping</a>
                 </div>
             </form>
-        <?php else: ?>
-            <p>Please <a href="<?php echo BASE_URL; ?>/login.php">login</a> to add items to your cart.</p>
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Add JavaScript for quantity buttons -->
+<script>
+// Remove any existing event listeners first
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle quantity buttons on product page
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.querySelector('.quantity-decrease');
+    const increaseBtn = document.querySelector('.quantity-increase');
+    
+    // Remove existing event listeners by cloning and replacing the buttons
+    if (decreaseBtn) {
+        const newDecreaseBtn = decreaseBtn.cloneNode(true);
+        decreaseBtn.parentNode.replaceChild(newDecreaseBtn, decreaseBtn);
+        
+        // Add new event listener
+        newDecreaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value) || 1;
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+    }
+    
+    if (increaseBtn) {
+        const newIncreaseBtn = increaseBtn.cloneNode(true);
+        increaseBtn.parentNode.replaceChild(newIncreaseBtn, increaseBtn);
+        
+        // Add new event listener
+        newIncreaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value) || 1;
+            quantityInput.value = currentValue + 1;
+        });
+    }
+});
+</script>
 
 <section class="related-products">
     <h2 class="section-title">Related Products</h2>

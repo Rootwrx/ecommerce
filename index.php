@@ -69,7 +69,21 @@ include 'includes/header.php';
                     </div>
                     <div class="product-actions">
                         <a href="<?php echo BASE_URL; ?>/product.php?id=<?php echo $product['product_id']; ?>" class="btn">View Details</a>
-                        <?php if (isLoggedIn()): ?>
+                        <?php 
+                        // Check if product is already in cart
+                        $cartItemId = isProductInCart($product['product_id']);
+                        
+                        if ($cartItemId): // Product is in cart
+                        ?>
+                            <div class="cart-buttons">
+                                <form action="<?php echo BASE_URL; ?>/cart-actions.php" method="POST" style="display: inline-block; margin-right: 5px;">
+                                    <input type="hidden" name="action" value="remove">
+                                    <input type="hidden" name="cart_item_id" value="<?php echo $cartItemId; ?>">
+                                    <button type="submit" class="btn btn-danger">Remove</button>
+                                </form>
+                                <a href="<?php echo BASE_URL; ?>/cart.php" class="btn">View in Cart</a>
+                            </div>
+                        <?php else: // Product is not in cart ?>
                             <form action="<?php echo BASE_URL; ?>/cart-actions.php" method="POST">
                                 <input type="hidden" name="action" value="add">
                                 <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
@@ -121,7 +135,21 @@ include 'includes/header.php';
                             </div>
                             <div class="product-actions">
                                 <a href="<?php echo BASE_URL; ?>/product.php?id=<?php echo $product['product_id']; ?>" class="btn">View Details</a>
-                                <?php if (isLoggedIn()): ?>
+                                <?php 
+                                // Check if product is already in cart
+                                $cartItemId = isProductInCart($product['product_id']);
+                                
+                                if ($cartItemId): // Product is in cart
+                                ?>
+                                    <div class="cart-buttons">
+                                        <form action="<?php echo BASE_URL; ?>/cart-actions.php" method="POST" style="display: inline-block; margin-right: 5px;">
+                                            <input type="hidden" name="action" value="remove">
+                                            <input type="hidden" name="cart_item_id" value="<?php echo $cartItemId; ?>">
+                                            <button type="submit" class="btn btn-danger">Remove</button>
+                                        </form>
+                                        <a href="<?php echo BASE_URL; ?>/cart.php" class="btn">View in Cart</a>
+                                    </div>
+                                <?php else: // Product is not in cart ?>
                                     <form action="<?php echo BASE_URL; ?>/cart-actions.php" method="POST">
                                         <input type="hidden" name="action" value="add">
                                         <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">

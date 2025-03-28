@@ -65,7 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $_SESSION['last_login'] = time();
 
-                    if ($user['user_type'] === 'admin') {
+                    // Transfer session cart to user cart if items exist
+                    transferSessionCartToUserCart($user['user_id']);
+
+                    // Check if there's a redirect parameter
+                    $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : '';
+                    if (!empty($redirect) && strpos($redirect, '/') === false) {
+                        redirect(BASE_URL . '/' . $redirect);
+                    } else if ($user['user_type'] === 'admin') {
                         redirect(ADMIN_URL);
                     } else {
                         redirect(BASE_URL);

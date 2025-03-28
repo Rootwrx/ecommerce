@@ -137,6 +137,41 @@ function getUserCart($userId) {
     ];
 }
 
+// Get cart (works for both logged in and non-logged in users)
+function getCart() {
+    if (isLoggedIn()) {
+        return getUserCart($_SESSION['user_id']);
+    } else {
+        return getSessionCart();
+    }
+}
+
+// Get session-based cart for non-logged in users
+function getSessionCart() {
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [
+            'items' => [],
+            'total_price' => 0,
+            'item_count' => 0
+        ];
+    }
+    
+    // Calculate total price and item count
+    $totalPrice = 0;
+    $itemCount = 0;
+    
+    foreach ($_SESSION['cart']['items'] as &$item) {
+        $item['subtotal'] = $item['price'] * $item['quantity'];
+        $totalPrice += $item['subtotal'];
+        $itemCount += $item['quantity'];
+    }
+    
+    $_SESSION['cart']['total_price'] = $totalPrice;
+    $_SESSION['cart']['item_count'] = count($_SESSION['cart']['items']);
+    
+    return $_SESSION['cart'];
+}
+
 // Add product to cart
 function addToCart($userId, $productId, $quantity = 1) {
     global $db;
@@ -169,6 +204,57 @@ function addToCart($userId, $productId, $quantity = 1) {
     }
 }
 
+// Add product to session cart
+function addToSessionCart($productId, $quantity = 1) {
+    $productId = (int)$productId;
+    $quantity = (int)$quantity;
+    
+    // Get product details
+    $product = getProductById($productId);
+    
+    if (!$product) {
+        return false;
+    }
+    
+    // Initialize cart if it doesn't exist
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [
+            'items' => [],
+            'total_price' => 0,
+            'item_count' => 0
+        ];
+    }
+    
+    // Check if product already in cart
+    $found = false;
+    foreach ($_SESSION['cart']['items'] as &$item) {
+        if ($item['product_id'] == $productId) {
+            $item['quantity'] += $quantity;
+            $found = true;
+            break;
+        }
+    }
+    
+    // If not found, add new item
+    if (!$found) {
+        $cartItem = [
+            'cart_item_id' => uniqid('item_'),  // Generate a unique ID for the item
+            'product_id' => $productId,
+            'quantity' => $quantity,
+            'title' => $product['title'],
+            'price' => $product['price'],
+            'image' => $product['image']
+        ];
+        
+        $_SESSION['cart']['items'][] = $cartItem;
+    }
+    
+    // Update cart totals
+    getSessionCart();
+    
+    return true;
+}
+
 // Update cart item quantity
 function updateCartItem($cartItemId, $quantity) {
     global $db;
@@ -188,6 +274,28 @@ function updateCartItem($cartItemId, $quantity) {
     return $stmt->execute();
 }
 
+// Update session cart item quantity
+function updateSessionCartItem($cartItemId, $quantity) {
+    $quantity = (int)$quantity;
+    
+    if ($quantity <= 0) {
+        return removeSessionCartItem($cartItemId);
+    }
+    
+    foreach ($_SESSION['cart']['items'] as &$item) {
+        if ($item['cart_item_id'] == $cartItemId) {
+            $item['quantity'] = $quantity;
+            
+            // Update cart totals
+            getSessionCart();
+            
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 // Remove item from cart
 function removeCartItem($cartItemId) {
     global $db;
@@ -196,6 +304,27 @@ function removeCartItem($cartItemId) {
     $stmt = $db->prepare("DELETE FROM cart_items WHERE cart_item_id = ?");
     $stmt->bind_param("i", $cartItemId);
     return $stmt->execute();
+}
+
+// Remove item from session cart
+function removeSessionCartItem($cartItemId) {
+    if (!isset($_SESSION['cart']) || empty($_SESSION['cart']['items'])) {
+        return false;
+    }
+    
+    foreach ($_SESSION['cart']['items'] as $key => $item) {
+        if ($item['cart_item_id'] == $cartItemId) {
+            unset($_SESSION['cart']['items'][$key]);
+            $_SESSION['cart']['items'] = array_values($_SESSION['cart']['items']); // Re-index array
+            
+            // Update cart totals
+            getSessionCart();
+            
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 // Create order from cart
@@ -315,7 +444,7 @@ function importProductsFromJson($jsonFile) {
 
 
 // Get all products with optional filtering
-function getProducts($category = null, $search = null, $sort = null, $limit = null, $offset = 0)
+function getProducts($categories = [], $search = null, $sort = null, $limit = null, $offset = 0)
 {
     global $db;
 
@@ -327,12 +456,21 @@ function getProducts($category = null, $search = null, $sort = null, $limit = nu
     $params = [];
     $types = "";
 
-    if ($category) {
-        // Make sure category is a string
-        $cat_value = is_array($category) ? $category[0] : $category;
-        $sql .= " AND c.name = ?";
-        $params[] = $cat_value;
-        $types .= "s";
+    // Ensure categories is always an array and handle empty/string cases
+    if (!is_array($categories)) {
+        $categories = $categories ? [$categories] : [];
+    }
+    
+    if (!empty($categories)) {
+        // Filter out empty values
+        $categories = array_filter($categories);
+        if (!empty($categories)) {
+            // Handle multiple categories
+            $placeholders = str_repeat('?,', count($categories) - 1) . '?';
+            $sql .= " AND c.name IN ($placeholders)";
+            $params = array_merge($params, $categories);
+            $types .= str_repeat('s', count($categories));
+        }
     }
 
     if ($search) {
@@ -391,4 +529,34 @@ function getProducts($category = null, $search = null, $sort = null, $limit = nu
     return $products;
 }
 
+// Check if a product is in the cart
+function isProductInCart($productId) {
+    $cart = getCart();
+    
+    foreach ($cart['items'] as $item) {
+        if ($item['product_id'] == $productId) {
+            return $item['cart_item_id'];
+        }
+    }
+    
+    return false;
+}
+
+// Transfer session cart to user cart after login
+function transferSessionCartToUserCart($userId) {
+    if (!isset($_SESSION['cart']) || empty($_SESSION['cart']['items'])) {
+        return;
+    }
+    
+    foreach ($_SESSION['cart']['items'] as $item) {
+        addToCart($userId, $item['product_id'], $item['quantity']);
+    }
+    
+    // Clear session cart
+    $_SESSION['cart'] = [
+        'items' => [],
+        'total_price' => 0,
+        'item_count' => 0
+    ];
+}
 ?>

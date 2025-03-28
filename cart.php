@@ -4,15 +4,8 @@ require_once 'includes/config.php';
 require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
-// Check if user is logged in
-if (!isLoggedIn()) {
-    $_SESSION['error_message'] = 'You must be logged in to view your cart';
-    redirect(BASE_URL . '/login.php');
-}
-
-// Get user's cart
-$userId = $_SESSION['user_id'];
-$cart = getUserCart($userId);
+// Get cart (works for both logged-in and non-logged-in users)
+$cart = getCart();
 
 include 'includes/header.php';
 ?>
@@ -97,10 +90,51 @@ include 'includes/header.php';
             
             <div class="cart-actions">
                 <a href="<?php echo BASE_URL; ?>" class="btn">Continue Shopping</a>
-                <a href="<?php echo BASE_URL; ?>/checkout.php" class="btn">Proceed to Checkout</a>
+                <?php if (isLoggedIn()): ?>
+                    <a href="<?php echo BASE_URL; ?>/checkout.php" class="btn">Proceed to Checkout</a>
+                <?php else: ?>
+                    <a href="<?php echo BASE_URL; ?>/login.php?redirect=checkout.php" class="btn">Login to Checkout</a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 <?php endif; ?>
+
+<!-- Add JavaScript for quantity buttons -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle quantity buttons on cart page
+    const decreaseBtns = document.querySelectorAll('.quantity-decrease');
+    const increaseBtns = document.querySelectorAll('.quantity-increase');
+    
+    // Remove existing event listeners by cloning and replacing the buttons
+    decreaseBtns.forEach(function(btn) {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Add new event listener
+        newBtn.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('input[name="quantity"]');
+            let value = parseInt(input.value);
+            if (value > 1) {
+                input.value = value - 1;
+            }
+        });
+    });
+    
+    // Add event listeners to increase buttons
+    increaseBtns.forEach(function(btn) {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Add new event listener
+        newBtn.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('input[name="quantity"]');
+            let value = parseInt(input.value);
+            input.value = value + 1;
+        });
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>
